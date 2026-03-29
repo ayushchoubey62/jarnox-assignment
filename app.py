@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, render_template
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression # <-- NEW: ML Library
+from sklearn.linear_model import LinearRegression
 import datetime
 
 app = Flask(__name__)
