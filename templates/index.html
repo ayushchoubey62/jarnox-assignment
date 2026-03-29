@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarnox Stock Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .sidebar { height: 100vh; background-color: #f8f9fa; padding-top: 20px; border-right: 1px solid #dee2e6; }
+        .company-item { cursor: pointer; transition: 0.2s; }
+        .company-item:hover { background-color: #e9ecef; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 sidebar">
+            <h4 class="text-center mb-4">📈 Companies</h4>
+            <div class="list-group" id="company-list">
+                <p class="text-center text-muted">Loading...</p>
+            </div>
+        </div>
+
+        <div class="col-md-9 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 id="dashboard-title">Select a company</h2>
+                
+                <div class="btn-group" role="group" id="filters" style="display: none;">
+                    <button type="button" class="btn btn-outline-primary active" onclick="changeTimeframe(30)" id="btn-30">Last 30 Days</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="changeTimeframe(90)" id="btn-90">Last 90 Days</button>
+                </div>
+            </div>
+            
+            <div class="row mt-3 mb-4" id="summary-cards" style="display: none;">
+                <div class="col-md-4">
+                    <div class="card text-center shadow-sm border-primary">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">Avg Close</h6>
+                            <h4 id="avg-close">--</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center shadow-sm border-success">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">52-Week High</h6>
+                            <h4 id="high-52" class="text-success">--</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center shadow-sm border-danger">
+                        <div class="card-body">
+                            <h6 class="card-title text-muted">52-Week Low</h6>
+                            <h4 id="low-52" class="text-danger">--</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-3 rounded shadow-sm border" style="height: 500px;">
+                <canvas id="stockChart"></canvas>
+            </div>
+            
+            <p class="text-muted mt-2 text-end" style="font-size: 0.85em;">* Dashed red line indicates AI price trend prediction (Linear Regression)</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let stockChartInstance = null;
+    let currentSymbol = '';
+    let currentName = '';
+    let currentDays = 30; // Default filter
+
+    async function fetchCompanies() {
+        try {
+            const response = await fetch('/companies');
+            const companies = await response.json();
+            const listContainer = document.getElementById('company-list');
+            listContainer.innerHTML = ''; 
+
+            companies.forEach(company => {
+                const button = document.createElement('button');
+                button.className = 'list-group-item list-group-item-action company-item fw-bold';
+                button.innerHTML = `${company.symbol} <br><small class="text-muted fw-normal">${company.name}</small>`;
+                button.onclick = () => {
+                    currentSymbol = company.symbol;
+                    currentName = company.name;
+                    document.getElementById('filters').style.display = 'inline-flex';
+                    loadStockData();
+                };
+                listContainer.appendChild(button);
+            });
+        } catch (error) {
+            console.error('Error fetching companies:', error);
+        }
+    }
+
+    // Handles the filter buttons
+    function changeTimeframe(days) {
+        currentDays = days;
+        document.getElementById('btn-30').classList.remove('active');
+        document.getElementById('btn-90').classList.remove('active');
+        document.getElementById(`btn-${days}`).classList.add('active');
+        loadStockData();
+    }
+
+    async function loadStockData() {
+        if (!currentSymbol) return;
+        
+        document.getElementById('dashboard-title').innerText = `${currentName} (${currentSymbol})`;
+        document.getElementById('summary-cards').style.display = 'flex';
+
+        try {
+            // Fetch data passing the days filter parameter
+            const dataResponse = await fetch(`/data/${currentSymbol}?days=${currentDays}`);
+            const payload = await dataResponse.json();
+            
+            const historicalData = payload.historical;
+            const predictionData = payload.predictions;
+
+            const summaryResponse = await fetch(`/summary/${currentSymbol}`);
+            const summaryData = await summaryResponse.json();
+
+            // ---> THE FIX IS HERE <---
+            // Using bracket notation for JSON keys that start with a number
+            document.getElementById('avg-close').innerText = `₹${summaryData.average_close}`;
+            document.getElementById('high-52').innerText = `₹${summaryData['52_week_high'].toFixed(2)}`;
+            document.getElementById('low-52').innerText = `₹${summaryData['52_week_low'].toFixed(2)}`;
+
+            // Build Chart Arrays
+            const allLabels = [];
+            const historicalPrices = [];
+            const predictedPrices = [];
+
+            // 1. Map Historical Data
+            historicalData.forEach(item => {
+                allLabels.push(item.Date.split(' ')[0]);
+                historicalPrices.push(item.Close);
+                predictedPrices.push(null); // Empty for this dataset
+            });
+
+            // To connect the lines visually, add the last historical point to the start of predictions
+            const lastHistoricalPrice = historicalPrices[historicalPrices.length - 1];
+            predictedPrices[predictedPrices.length - 1] = lastHistoricalPrice;
+
+            // 2. Map Prediction Data
+            predictionData.forEach(item => {
+                allLabels.push(item.Date);
+                historicalPrices.push(null); // Empty for this dataset
+                predictedPrices.push(item.Predicted_Close);
+            });
+
+            drawChart(allLabels, historicalPrices, predictedPrices, currentSymbol);
+
+        } catch (error) {
+            console.error('Error loading stock data:', error);
+        }
+    }
+
+    function drawChart(labels, historicalData, predictedData, symbol) {
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        
+        if (stockChartInstance) {
+            stockChartInstance.destroy();
+        }
+
+        stockChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Historical Close',
+                        data: historicalData,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'AI Prediction Trend',
+                        data: predictedData,
+                        borderColor: '#dc3545', // Bootstrap red
+                        borderWidth: 2,
+                        borderDash: [5, 5], // Makes the line dashed!
+                        fill: false,
+                        tension: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: false }
+                }
+            }
+        });
+    }
+
+    fetchCompanies();
+</script>
+</body>
+</html>

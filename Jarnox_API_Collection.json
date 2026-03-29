@@ -1,0 +1,83 @@
+{
+  "info": {
+    "name": "Jarnox Stock Data API",
+    "description": "Postman collection for the Jarnox Internship Assignment Backend API (Flask).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Available Companies",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:5000/companies",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "5000",
+          "path": ["companies"]
+        },
+        "description": "Returns a list of all available companies in the mock database."
+      },
+      "response": []
+    },
+    {
+      "name": "Get 30 Days Stock Data",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:5000/data/INFY.NS",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "5000",
+          "path": ["data", "INFY.NS"]
+        },
+        "description": "Returns the last 30 days of stock data for a given symbol, including calculated metrics like Moving Averages and Volatility Scores."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Stock Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:5000/summary/INFY.NS",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "5000",
+          "path": ["summary", "INFY.NS"]
+        },
+        "description": "Returns the 52-week high, 52-week low, and average close price."
+      },
+      "response": []
+    },
+    {
+      "name": "Compare Two Stocks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:5000/compare?symbol1=INFY.NS&symbol2=TCS.NS",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "5000",
+          "path": ["compare"],
+          "query": [
+            {
+              "key": "symbol1",
+              "value": "INFY.NS"
+            },
+            {
+              "key": "symbol2",
+              "value": "TCS.NS"
+            }
+          ]
+        },
+        "description": "Compares the 1-year performance of two different stock symbols."
+      },
+      "response": []
+    }
+  ]
+}
