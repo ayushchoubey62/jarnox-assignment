@@ -16,9 +16,16 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-3 sidebar">
-            <h4 class="text-center mb-4">📈 Companies</h4>
-            <div class="list-group" id="company-list">
+        <div class="col-md-3 sidebar d-flex flex-column">
+            <h4 class="text-center mb-3">📈 Companies</h4>
+            
+            <div class="px-3 mb-3">
+                <button class="btn btn-warning w-100 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#compareModal">
+                    ⚖️ Compare Stocks
+                </button>
+            </div>
+
+            <div class="list-group flex-grow-1" id="company-list" style="overflow-y: auto;">
                 <p class="text-center text-muted">Loading...</p>
             </div>
         </div>
@@ -69,6 +76,46 @@
     </div>
 </div>
 
+<div class="modal fade" id="compareModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title fw-bold">Compare 1-Year Performance</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+            <label class="form-label">Stock 1</label>
+            <select id="compare-stock-1" class="form-select"></select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Stock 2</label>
+            <select id="compare-stock-2" class="form-select"></select>
+        </div>
+        <button class="btn btn-primary w-100" onclick="runComparison()">Run Comparison</button>
+        
+        <div id="compare-results" class="mt-4" style="display: none;">
+            <hr>
+            <div class="row text-center">
+                <div class="col-6 border-end">
+                    <h5 id="res-sym-1" class="fw-bold">--</h5>
+                    <p class="text-muted mb-0">Current Price: <span id="res-price-1" class="text-dark">--</span></p>
+                    <p class="mb-0">1Y Return: <span id="res-ret-1" class="fw-bold">--</span></p>
+                </div>
+                <div class="col-6">
+                    <h5 id="res-sym-2" class="fw-bold">--</h5>
+                    <p class="text-muted mb-0">Current Price: <span id="res-price-2" class="text-dark">--</span></p>
+                    <p class="mb-0">1Y Return: <span id="res-ret-2" class="fw-bold">--</span></p>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     let stockChartInstance = null;
     let currentSymbol = '';
@@ -81,8 +128,13 @@
             const companies = await response.json();
             const listContainer = document.getElementById('company-list');
             listContainer.innerHTML = ''; 
+            
+            // Clear dropdowns before populating
+            document.getElementById('compare-stock-1').innerHTML = '';
+            document.getElementById('compare-stock-2').innerHTML = '';
 
             companies.forEach(company => {
+                // Populate sidebar list
                 const button = document.createElement('button');
                 button.className = 'list-group-item list-group-item-action company-item fw-bold';
                 button.innerHTML = `${company.symbol} <br><small class="text-muted fw-normal">${company.name}</small>`;
@@ -93,6 +145,10 @@
                     loadStockData();
                 };
                 listContainer.appendChild(button);
+                
+                // Populate comparison dropdowns
+                document.getElementById('compare-stock-1').innerHTML += `<option value="${company.symbol}">${company.name} (${company.symbol})</option>`;
+                document.getElementById('compare-stock-2').innerHTML += `<option value="${company.symbol}">${company.name} (${company.symbol})</option>`;
             });
         } catch (error) {
             console.error('Error fetching companies:', error);
@@ -125,7 +181,6 @@
             const summaryResponse = await fetch(`/summary/${currentSymbol}`);
             const summaryData = await summaryResponse.json();
 
-            // ---> THE FIX IS HERE <---
             // Using bracket notation for JSON keys that start with a number
             document.getElementById('avg-close').innerText = `₹${summaryData.average_close}`;
             document.getElementById('high-52').innerText = `₹${summaryData['52_week_high'].toFixed(2)}`;
@@ -203,6 +258,49 @@
                 }
             }
         });
+    }
+
+    // NEW: Function to run the comparison API
+    async function runComparison() {
+        const sym1 = document.getElementById('compare-stock-1').value;
+        const sym2 = document.getElementById('compare-stock-2').value;
+
+        if (sym1 === sym2) {
+            alert("Please select two different stocks to compare.");
+            return;
+        }
+
+        const resultsDiv = document.getElementById('compare-results');
+        resultsDiv.style.display = 'none'; // Hide while loading
+
+        try {
+            const response = await fetch(`/compare?symbol1=${sym1}&symbol2=${sym2}`);
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            // Populate Results for Stock 1
+            document.getElementById('res-sym-1').innerText = sym1;
+            document.getElementById('res-price-1').innerText = `₹${data[sym1].current_price.toFixed(2)}`;
+            const ret1 = data[sym1]['1_year_return_percent'];
+            const ret1El = document.getElementById('res-ret-1');
+            ret1El.innerText = `${ret1 > 0 ? '+' : ''}${ret1}%`;
+            ret1El.className = ret1 > 0 ? 'text-success fw-bold' : 'text-danger fw-bold';
+
+            // Populate Results for Stock 2
+            document.getElementById('res-sym-2').innerText = sym2;
+            document.getElementById('res-price-2').innerText = `₹${data[sym2].current_price.toFixed(2)}`;
+            const ret2 = data[sym2]['1_year_return_percent'];
+            const ret2El = document.getElementById('res-ret-2');
+            ret2El.innerText = `${ret2 > 0 ? '+' : ''}${ret2}%`;
+            ret2El.className = ret2 > 0 ? 'text-success fw-bold' : 'text-danger fw-bold';
+
+            resultsDiv.style.display = 'block'; // Show results
+
+        } catch (error) {
+            console.error('Error comparing stocks:', error);
+            alert("Failed to fetch comparison data.");
+        }
     }
 
     fetchCompanies();
