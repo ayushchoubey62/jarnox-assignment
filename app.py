@@ -7,13 +7,18 @@ import datetime
 
 app = Flask(__name__)
 
-# Mock database of available companies
 AVAILABLE_COMPANIES = {
     "INFY.NS": "Infosys Limited",
     "TCS.NS": "Tata Consultancy Services",
     "RELIANCE.NS": "Reliance Industries",
+    "HDFCBANK.NS": "HDFC Bank",
+    "TATAMOTORS.NS": "Tata Motors",
     "AAPL": "Apple Inc.",
-    "MSFT": "Microsoft Corporation"
+    "MSFT": "Microsoft Corporation",
+    "GOOGL": "Alphabet Inc. (Google)",
+    "AMZN": "Amazon.com Inc.",
+    "TSLA": "Tesla Inc.",
+    "NVDA": "NVIDIA Corporation"
 }
 
 def fetch_single_stock_data(symbol: str) -> pd.DataFrame:
