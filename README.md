@@ -9,9 +9,9 @@ An AI-powered financial data platform built for the **Jarnox Software Internship
 * **Real-time Data Collection**: Fetches live stock market data using the `yfinance` API.
 * **Automated Data Cleaning**: Uses Pandas to handle missing values and format date columns properly.
 * **Financial Metrics**: Automatically calculates **Daily Returns**, **7-day Moving Averages**, and **52-week High/Low**.
-* **Custom Analytics**: Includes an original **Volatility Score** (annualized rolling standard deviation).
+* **Stock Comparison Engine**: A dedicated interactive UI modal to instantly compare 1-year performance returns between any two stocks.
 * **AI Predictions**: Features a **Linear Regression ML model** that predicts price trends for the next 5 days based on historical patterns.
-* **Interactive Dashboard**: A responsive UI built with **Bootstrap** and **Chart.js** for seamless data visualization.
+* **Interactive Dashboard**: A responsive UI built with **Bootstrap** and **Chart.js** for seamless data visualization and time-frame filtering.
 * **API Documentation**: Includes a pre-configured **Postman Collection** (`Jarnox_API_Collection.json`) for professional endpoint exploration.
 
 ## 🛠️ Tech Stack
@@ -39,6 +39,6 @@ An AI-powered financial data platform built for the **Jarnox Software Internship
 
 ## 📂 API Endpoints
 - `GET /companies`: Returns a list of all available companies.
-- `GET /data/{symbol}`: Returns historical stock data and AI predictions.
+- `GET /data/{symbol}?days=30`: Returns historical stock data and AI predictions.
 - `GET /summary/{symbol}`: Returns 52-week high, low, and average close.
 - `GET /compare?symbol1=INFY.NS&symbol2=TCS.NS`: Compare two stocks' performance.
