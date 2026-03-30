@@ -1,6 +1,9 @@
 # Stock Data Intelligence Dashboard 🚀
 
-An AI-powered financial data platform built for the **Jarnox Software Internship Assignment**. This project demonstrates a full-stack approach to financial data analysis, combining real-time data fetching, RESTful API design, and machine learning.
+An AI-powered financial data platform built for the **Jarnox Software Internship Assignment**. This project demonstrates a full-stack approach to financial data analysis, combining real-time data fetching, RESTful API design, machine learning, and professional DevOps practices.
+
+## 🌐 Live Demo
+**View the live project here:** [https://jarnox-assignment-tcgz.onrender.com](https://jarnox-assignment-tcgz.onrender.com)
 
 ## 🌟 Key Features
 * **Real-time Data Collection**: Fetches live stock market data using the `yfinance` API.
@@ -9,13 +12,13 @@ An AI-powered financial data platform built for the **Jarnox Software Internship
 * **Custom Analytics**: Includes an original **Volatility Score** (annualized rolling standard deviation).
 * **AI Predictions**: Features a **Linear Regression ML model** that predicts price trends for the next 5 days based on historical patterns.
 * **Interactive Dashboard**: A responsive UI built with **Bootstrap** and **Chart.js** for seamless data visualization.
-* **API Documentation**: Includes a pre-configured **Postman Collection** for professional endpoint exploration.
+* **API Documentation**: Includes a pre-configured **Postman Collection** (`Jarnox_API_Collection.json`) for professional endpoint exploration.
 
 ## 🛠️ Tech Stack
 * **Backend**: Python, Flask
 * **Data Science**: Pandas, NumPy, Scikit-learn
 * **Frontend**: HTML5, JavaScript (ES6), Bootstrap 5, Chart.js
-* **DevOps**: Docker, Gunicorn
+* **DevOps**: Docker, Gunicorn, Render Cloud
 
 ## 🚀 Getting Started
 
@@ -36,6 +39,6 @@ An AI-powered financial data platform built for the **Jarnox Software Internship
 
 ## 📂 API Endpoints
 - `GET /companies`: Returns a list of all available companies.
-- `GET /data/{symbol}`: Returns the last 30 days of stock data.
+- `GET /data/{symbol}`: Returns historical stock data and AI predictions.
 - `GET /summary/{symbol}`: Returns 52-week high, low, and average close.
-- `GET /compare?symbol1=INFY.NS&symbol2=TCS.NS`: (Bonus) Compare two stocks' performance.
+- `GET /compare?symbol1=INFY.NS&symbol2=TCS.NS`: Compare two stocks' performance.
